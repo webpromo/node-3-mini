@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import HistoryModal from './components/HistoryModal';
 import './App.css';
+import axios from 'axios';
 
 class App extends Component {
   constructor(props) {
@@ -15,11 +16,25 @@ class App extends Component {
     this.closeHistoryModal = this.closeHistoryModal.bind(this);
   }
 
+  componentDidMount() {
+    axios.get('/api/messages').then(res => {
+      this.setState({ allMessages: res.data });
+    });
+  }
+
   saveUsername() {
     if (this.state.username) {
-      // send username to the server to put on session
       this.setState({ messageInputDisabled: !this.state.messageInputDisabled });
     }
+  }
+
+  createMessage() {
+    let { username, message } = this.state;
+    axios
+      .post('/api/messages', { username: username, message: message })
+      .then(res => {
+        this.setState({ allMessages: res.data, message: '' });
+      });
   }
 
   showHistoryModal() {
@@ -30,10 +45,10 @@ class App extends Component {
   }
 
   render() {
-    let allMessages = this.state.allMessages.map(messageObj => {
+    let allMessages = this.state.allMessages.map((messageObj, i) => {
       return (
-        <div className="message" key={messageObj.id}>
-          <span>username</span>
+        <div className="message" key={i}>
+          <span>{messageObj.username}</span>
           <span>{messageObj.message}</span>
         </div>
       );
@@ -70,6 +85,7 @@ class App extends Component {
               }
             />
             <button
+              onClick={() => this.createMessage()}
               disabled={this.state.messageInputDisabled}
               className="button-message">
               send
